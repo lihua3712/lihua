@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!--在spring配置文件使用PropertyPlaceholderConfiguere类加载使用文件-->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:jdbc.properties</value>
+            </list>
+        </property>
+    </bean>
+    <!--定义数据源组件-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${driverClassName}"></property>
+        <property name="url" value="${url}"></property>
+        <property name="username" value="${username}"></property>
+        <property name="password" value="${password}"></property>
+    </bean>
+
+    <!--定义sqlSessionFactory组件-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--注入数据源-->
+        <property name="dataSource" ref="dataSource"></property>
+        <!--加载mybatis的配置,将mybatis整合到spring容器中-->
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+    </bean>
+
+    <!--&lt;!&ndash; 定义sqlSessionTemplate模板对象服务于所有dao层组件&ndash;&gt;
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"></constructor-arg>
+    </bean>-->
+
+    <!--生成代理实现类的bean对象的id值就是接口名称（首字母小写）-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--注入sqlSessionFactory工厂-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+        <!--指定生成dao层实现类对应的dao接口包-->
+        <property name="basePackage" value="com.photos.mapper"></property>
+    </bean>
+
+    <!--定义dao层组件-->
+    <!-- <bean id="studentDao"  autowire="byType" class="com.grade.dao.impl.StudentDaoImpl">
+         <property name="sqlSessionTemplate" ref="sqlSessionTemplate"></property>
+     </bean>-->
+
+    <!-- <bean id="studentService"  autowire="byType" class="com.grade.service.impl.StudentServiceImpl">
+         &lt;!&ndash;<property name="studentsMapper" ref="studentDao"></property>&ndash;&gt;
+     </bean>-->
+
+    <!--在spring容器中添加扫描的配置（针对业务）-->
+    <context:component-scan base-package="com.photos.service.impl"></context:component-scan>
+
+    <!--&lt;!&ndash;定义dao层组件&ndash;&gt;
+    <bean id="studentDao" class="com.grade.dao.impl.StudentDaoImpl">
+        <property name="sqlSessionTemplate" ref="sqlSessionTemplate"></property>
+    </bean>
+    &lt;!&ndash;定义service层组件&ndash;&gt;
+    <bean id="StudentService" class="com.grade.service.impl.StudentServiceImpl">
+        <property name="studentsMapper" ref="studentDao"></property>
+    </bean>-->
+
+    <!--配置spring事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <!--配置注解事务-->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"></tx:annotation-driven>
+</beans>
